@@ -1,0 +1,171 @@
+# Power BI Dashboard Setup Guide
+# E-Commerce Sales Analytics Dashboard
+# ============================================================
+
+## STEP-BY-STEP: Build Your Power BI Dashboard
+
+### Prerequisites
+- Power BI Desktop installed (free from Microsoft Store)
+- ecommerce_sales.csv file ready in your project folder
+
+---
+
+## STEP 1 — Import Data
+
+1. Open Power BI Desktop
+2. Click **Home → Get Data → Text/CSV**
+3. Select `ecommerce_sales.csv`
+4. In the preview window, click **Transform Data**
+
+---
+
+## STEP 2 — Clean Data in Power Query
+
+In the Power Query Editor:
+
+1. **Change column types:**
+   - `order_date` → Date
+   - `total_amount`, `unit_price`, `discount_amt` → Decimal Number
+   - `quantity`, `discount_pct` → Whole Number
+
+2. **Add a Month Number column** (for correct chronological sorting):
+   - Click **Add Column → Custom Column**
+   - Name: `month_num`
+   - Formula: `= Date.Month([order_date])`
+
+3. Click **Close & Apply**
+
+---
+
+## STEP 3 — Create DAX Measures
+
+In the **Report** view, click **New Measure** and add these:
+
+```dax
+-- Total Revenue
+Total Revenue = SUM(ecommerce_sales[total_amount])
+
+-- Delivered Revenue
+Delivered Revenue =
+CALCULATE(SUM(ecommerce_sales[total_amount]),
+          ecommerce_sales[order_status] = "Delivered")
+
+-- Total Orders
+Total Orders = COUNTROWS(ecommerce_sales)
+
+-- Average Order Value
+Avg Order Value =
+AVERAGEX(FILTER(ecommerce_sales,
+                ecommerce_sales[order_status] = "Delivered"),
+         ecommerce_sales[total_amount])
+
+-- Delivery Rate %
+Delivery Rate % =
+DIVIDE(
+    COUNTROWS(FILTER(ecommerce_sales, ecommerce_sales[order_status] = "Delivered")),
+    COUNTROWS(ecommerce_sales)
+) * 100
+
+-- Return Rate %
+Return Rate % =
+DIVIDE(
+    COUNTROWS(FILTER(ecommerce_sales, ecommerce_sales[order_status] = "Returned")),
+    COUNTROWS(ecommerce_sales)
+) * 100
+```
+
+---
+
+## STEP 4 — Build the Dashboard Page
+
+**Page Name:** Sales Analytics Dashboard
+
+### Visual 1 — KPI Cards (Top Row)
+Insert 4 **Card visuals** side by side:
+- Card 1 → **Total Orders** measure
+- Card 2 → **Delivered Revenue** measure
+- Card 3 → **Avg Order Value** measure
+- Card 4 → **Delivery Rate %** measure
+
+### Visual 2 — Line Chart (Monthly Revenue Trend)
+- Visualization: **Line Chart**
+- X-axis: `order_date` (set to Month level)
+- Y-axis: `Delivered Revenue` measure
+- Title: "Monthly Revenue Trend"
+
+### Visual 3 — Bar Chart (Revenue by Category)
+- Visualization: **Clustered Bar Chart**
+- Y-axis: `category`
+- X-axis: `Delivered Revenue`
+- Sort: Descending by Revenue
+- Title: "Revenue by Category"
+
+### Visual 4 — Donut Chart (Regional Share)
+- Visualization: **Donut Chart**
+- Legend: `region`
+- Values: `Delivered Revenue`
+- Title: "Revenue by Region"
+
+### Visual 5 — Table (Top Products)
+- Visualization: **Table**
+- Columns: `product`, `category`, `quantity` (Sum), `Delivered Revenue`
+- Sort by Revenue descending
+- Title: "Top Products"
+
+### Visual 6 — Stacked Bar (Order Status by Quarter)
+- Visualization: **Stacked Bar Chart**
+- X-axis: `quarter`
+- Y-axis: Count of `order_id`
+- Legend: `order_status`
+- Title: "Orders by Quarter & Status"
+
+---
+
+## STEP 5 — Add Slicers (Filters)
+Add 3 **Slicer visuals** on the left panel:
+- Slicer 1: `region`
+- Slicer 2: `category`
+- Slicer 3: `order_status`
+
+---
+
+## STEP 6 — Format & Theme
+1. Click **View → Themes → Browse for themes**
+   OR manually set colors:
+   - Primary: #185FA5
+   - Secondary: #1D9E75
+   - Accent: #D85A30
+
+2. Add a **Text Box** at the top:
+   Title: "E-Commerce Sales Analytics Dashboard | 2023"
+   Font: Bold, Size 18, Color #185FA5
+
+---
+
+## STEP 7 — Export
+1. Click **File → Export → Export to PDF** for screenshots
+2. Publish to Power BI Service (free account) for a shareable link
+3. Take a screenshot and save as `powerbi_dashboard.png` for your resume/GitHub
+
+---
+
+## Final Project Folder Structure
+
+ecommerce_dashboard/
+├── data/
+│   └── ecommerce_sales.csv          ← raw dataset (2000 rows)
+├── sql/
+│   └── kpi_queries.sql              ← 10 business KPI queries
+├── outputs/
+│   ├── chart1_monthly_revenue.png
+│   ├── chart2_category_revenue.png
+│   ├── chart3_regional_revenue.png
+│   ├── chart4_top_products.png
+│   ├── chart5_order_status.png
+│   ├── chart6_payment_methods.png
+│   └── ecommerce_report.xlsx        ← 7-sheet Excel report
+├── generate_data.py                 ← dataset generator
+├── eda_analysis.py                  ← EDA + 6 charts
+├── excel_report.py                  ← Excel report generator
+├── powerbi_guide.txt                ← this file
+└── README.md                        ← GitHub documentation
